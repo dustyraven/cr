@@ -5,6 +5,7 @@ date_default_timezone_set("Europe/Sofia");
 mb_internal_encoding("UTF-8");
 set_time_limit(10);
 
+//sleep(1); die;
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -51,8 +52,8 @@ function login($user, $pass)
 
 	$post = array(
 		'action' => 'login',
-		'login_email' => $user,
-		'password' => $pass,
+		'login_email' => base64_decode($user),
+		'password' => base64_decode($pass),
 	);
 
 	$result = doCurl(URL, $post);
@@ -214,7 +215,7 @@ define('ADMIN', in_array(IP, $admins));
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-file_put_contents('log.txt', "\n".date('[d.m.Y H:i:s] ').IP, FILE_APPEND | LOCK_EX);
+//file_put_contents('log.txt', "\n".date('[d.m.Y H:i:s] ').IP, FILE_APPEND | LOCK_EX);
 
 
 

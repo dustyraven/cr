@@ -794,7 +794,7 @@ var cr = {},
 		stopEvent(e);
 		var h = $(this).attr("href"), r = $("#redirect");
 
-		track("Redirect",h);
+		track("Redirect","ClubR",h);
 
 		r.attr("action", api_url);
 		r.find("[name=redirect]").val(h);
@@ -802,6 +802,10 @@ var cr = {},
 		r.find("[name=pass]").val(getVar("pass"));
 		r.submit();
 		return false;
+	});
+
+	$("#footer").on("click", "a", function(e) {
+		track("Redirect", "Other", $(this).attr("href"));
 	});
 
 

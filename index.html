@@ -290,14 +290,21 @@ ga('send', 'pageview');
 		}
 
 
+	if("function" != typeof validateEmail)
+		function validateEmail(email) {
+			var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+			return re.test(email);
+		}
 
 
 	function logout() {
-		var data = getVar("data");
+		var data = getVar("data"), user = getVar("user");
 
 		$.each( data.events, function( key, value ) {
 			value.status = 0;
 		});
+
+		track("Misc", "LogOut", user);
 
 		data.isLogged = 0;
 		setVar("data", data);
@@ -525,6 +532,8 @@ title: "Как избираме партньор"
 
   		var statusEl = "";
 
+  		track("View",types[e.type], e.title);
+
 		if(2 == e.status)
 			statusEl =$("<div>").attr({"class":"alert-success"}).html("Вие ще участвате в събитието");
 		else if(3 == e.status)
@@ -590,11 +599,13 @@ function login(user, pass)
 		pass = $("#pass").val();
 	}
 
-	if(user.length < 3 || pass.length < 3)
+	if(user.length < 3 || pass.length < 3 || !validateEmail(user))
 		return false;
 
 	setVar("user", user);
 	setVar("pass", pass);
+
+	track("Misc", "LogIn", user);
 
 	loadData(true);
 }
@@ -613,7 +624,6 @@ function loadData(force) {
 	}
 
 
-
 	$("#updBtn").hide();
 	$("#updStatus").html(" ...обновяване...");
 	$("#loading").show();
@@ -622,6 +632,9 @@ function loadData(force) {
 		user: getVar("user"),
 		pass: getVar("pass")
 	};
+	var user = req.user;
+
+	track("Update", "Request", user);
 
 	req.user = req.user.length ? btoa(req.user) : '';
 	req.pass = req.pass.length ? btoa(req.pass) : '';
@@ -640,8 +653,10 @@ function loadData(force) {
 	}).done(function( data ) {
 		setVar("data", data);
 		$("#updStatus").html("");
+		track("Update", "Success", user);
 	}).fail(function() {
 		$("#updStatus").html("грешка при обновяване");
+		track("Update", "Failed", user);
   	}).always(function() {
 		dataLoaded();
 		$("#updBtn").show();
@@ -661,6 +676,7 @@ function dataLoaded(data) {
 
 	if(data.err_login) {
 		$("#loginFailed").html(data.err_login).removeClass("hidden");
+		track("Misc", "LogIn Failed", getVar("user"));
 		setVar("user", false);
 		setVar("pass", false);
 		isLogged = false;
@@ -684,7 +700,15 @@ function dataLoaded(data) {
 	$.each(filters, function( i, k ) {
 		$( $("li[class^='"+k+"']") ).each(function() {
 			var c = $(this).attr('class').match(/[\d\w-_]+/g)[0];
-			$(this).find('a').on("click",function(){setVar(k,c.replace(/\D/g,''))})
+			$(this).find('a').on("click",function(){
+				var idx = c.replace(/\D/g,''), filterVal = "Unknown";
+				setVar(k,idx);
+
+				if('type' == k) filterVal = types[idx];
+				else if('city' == k) filterVal = cities[idx];
+				else if('status' == k) filterVal = statuses[idx];
+				track("Filter",filterNames[k],filterVal);
+			})
 		});
 	});
 
@@ -726,9 +750,26 @@ function create_options(prefix, opts) {
 }
 
 
+function track(category, action, label, value) {
+
+	if("undefined" == typeof ga) return false;
+	if(!category || !action) return false;
+
+	var e = {
+		'hitType': 'event',
+		'eventCategory': category,
+		'eventAction': action
+	};
+	if(label) e.eventLabel = label;
+	//if(value) e.eventValue = value;
+	ga('send', e);
+}
+
+
 var cr = {},
 	isLogged = 0,
 	filters = ['type','city','status'],
+	filterNames = {'type':'Събитие','city':'Град','status':'Статус'},
 	types,
 	cities,
 	events,
@@ -739,7 +780,6 @@ var cr = {},
 (function($) {
 
 	if (window.navigator.standalone) {
-	    // The app is running in standalone mode.
 		$(".navbar-fixed-top").css("top", "20px");
 		$("body").css("padding-top", "90px");
 	}
@@ -753,6 +793,8 @@ var cr = {},
 	$(document).on("click", "a.crlink", function(e) {
 		stopEvent(e);
 		var h = $(this).attr("href"), r = $("#redirect");
+
+		track("Redirect",h);
 
 		r.attr("action", api_url);
 		r.find("[name=redirect]").val(h);

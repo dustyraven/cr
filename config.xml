@@ -71,6 +71,7 @@
     -->
     <gap:plugin name="com.phonegap.plugins.pushplugin" version="2.1.1" />
 
+
     <!-- Define app icon for each platform. -->
     <icon src="res/icon.png" />
     <icon src="res/icon/android/icon-36-ldpi.png"   gap:platform="android"    gap:qualifier="ldpi" />

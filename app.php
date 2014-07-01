@@ -71,6 +71,30 @@ function login($user, $pass)
 }
 
 
+function parseProfile($data)
+{
+
+	$profile = new stdclass;
+
+	preg_match('/form\s+name="profile_form".*?<table>(.*?)<\/table>.*?<\/form>/is',$data, $m);
+	$form = $m[1];
+	preg_match('/Име.+?<\/td><td>(.*?)<\/td>.*?Фамилия.+?<\/td><td>(.*?)<\/td>/is',$form, $m);
+	$profile->name = $m[1];
+	$profile->surname = $m[2];
+	preg_match('/Пол.+?<\/td><td>(.*?)<\/td>/is',$form, $m);
+	$profile->sex = $m[1];
+	preg_match('/Рождена дата.+?<\/td><td>(.*?)<\/td>/is',$form, $m);
+	$profile->birthday = $m[1];
+	preg_match_all('/input.+?name=".*?".+?\>/is',$form, $m);
+	foreach($m[0] as $i)
+	{
+		preg_match('/value="(.*?)"/is',$i, $m);
+		$val = $m[1];
+		preg_match('/name="(.*?)"/is',$i, $m);
+		$profile->{$m[1]} = $val;
+	}
+	return $profile;
+}
 
 function parseData($data)
 {
@@ -202,6 +226,7 @@ list($IP) = explode(',', empty($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['REM
 define('IP', $IP);
 define('URL', 'http://www.clubr.bg/');
 define('URL2', URL . urlencode('предстоящи-събития.html'));
+define('URL3', URL . 'profile.php');
 define('AJAX', (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest'));
 
 define('API',	(false === strpos(strtolower($_SERVER['SERVER_PROTOCOL']),'https') ? 'http' : 'https') . '://' .
@@ -291,13 +316,17 @@ if(false !== $redirect)
 
 $isLogged = false;
 
+if(ADMIN && $dumper) {$user = base64_encode('dusty@gbg.bg'); $pass=base64_encode('crow666');}
+
 $cookie = login($user,$pass);
 
 $opts = $cookie ? array(CURLOPT_COOKIE => 'PHPSESSID=' . $cookie . ';') : array();
 
-$events = doCurl(URL2, false, $opts);
 
-$events = parseData($events);
+$events = parseData(doCurl(URL2, false, $opts));
+
+$profile = $cookie ? parseProfile(doCurl(URL3, false, $opts)) : false;
+
 
 $data = (object)array(
 	'isLogged'	=>	(int)$isLogged,
@@ -307,13 +336,14 @@ $data = (object)array(
 	'types'		=>	$types,
 	'cities'	=>	$cities,
 	'statuses'	=>	$statuses,
+	'profile'	=>	$profile,
 );
 
 if($user && $pass && !$isLogged)
 	$data->err_login = "Невалидни данни за вход";
 
-if(ADMIN && $dumper)
-	p($data,1);
+
+if(ADMIN && $dumper) p($data,1);
 
 if($callback)
 {

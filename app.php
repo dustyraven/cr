@@ -52,8 +52,8 @@ function login($user, $pass)
 
 	$post = array(
 		'action' => 'login',
-		'login_email' => base64_decode($user),
-		'password' => base64_decode($pass),
+		'login_email' => $user,
+		'password' => $pass,
 	);
 
 	$result = doCurl(URL, $post);
@@ -262,6 +262,9 @@ foreach($defaults as $var => $val)
 foreach($defaults as $var => $val)
 	$$var = (isset($_POST[$var]) && strlen($_POST[$var])) ? $_POST[$var] : $$var;
 
+if($user) $user = base64_decode($user);
+if($pass) $pass = base64_decode($pass);
+
 
 /**
  *	BACK DOOR MAN
@@ -316,7 +319,7 @@ if(false !== $redirect)
 
 $isLogged = false;
 
-if(ADMIN && $dumper) {$user = base64_encode('dusty@gbg.bg'); $pass=base64_encode('crow666');}
+if(ADMIN && $dumper) {$user = 'dusty@gbg.bg'; $pass= 'crow666';}
 
 $cookie = login($user,$pass);
 

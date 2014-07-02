@@ -125,6 +125,7 @@ ga('send', 'pageview');
 </script>
 <!-- End Google Analytics -->
 
+<script src="phonegap.js"></script>
 
 </head>
 
@@ -196,6 +197,9 @@ ga('send', 'pageview');
 		</div>
 	</div>
 
+	<pre class="col-xs-12 col-lg-6 col-lg-offset-3" id="console"></pre>
+	<br />
+	&nbsp;
 </div>
 
 
@@ -231,14 +235,6 @@ ga('send', 'pageview');
 		</div>
 	</div>
 </div>
-
-<!-- redirect -->
-<form style="display:none;" id="redirect" action="" target="_blank" method="post">
-	<input type="hidden" name="redirect" value="" />
-	<input type="hidden" name="user" value="" />
-	<input type="hidden" name="pass" value="" />
-</form>
-<!-- end of redirect -->
 
 
 <script src="js/jquery-1.11.1.min.js"></script>
@@ -750,10 +746,33 @@ function create_options(prefix, opts) {
 }
 
 
+function openUrl(url) {
+	if("undefined" != typeof device && "Android" == device.platform) {
+		navigator.app.loadUrl(url, {openExternal:true});
+	} else {
+		window.open(url, '_system');
+	}
+}
+
+
+function clog(str) {
+	var c = $("#console");
+	c.append(str + "\n");
+	var splitted = c.html().split("\n");
+	var txt = splitted.slice(-6,-1).join("\n") + "\n";
+	c.html(txt);
+}
+
 function track(category, action, label, value) {
 
-	if("undefined" == typeof ga) return false;
+	if("undefined" == typeof ga) {
+		clog("GA is not installed");
+		return false;
+	}
+
 	if(!category || !action) return false;
+
+clog("Track: " + category + " : " + action);
 
 	var e = {
 		'hitType': 'event',
@@ -792,20 +811,26 @@ var cr = {},
 
 	$(document).on("click", "a.crlink", function(e) {
 		stopEvent(e);
-		var h = $(this).attr("href"), r = $("#redirect");
+		var h = $(this).attr("href");
 
 		track("Redirect","ClubR",h);
 
-		r.attr("action", api_url);
-		r.find("[name=redirect]").val(h);
-		r.find("[name=user]").val(getVar("user"));
-		r.find("[name=pass]").val(getVar("pass"));
-		r.submit();
+		var p = $.param({
+			'redirect': h,
+			'user': btoa(getVar("user")),
+			'pass': btoa(getVar("pass"))
+		});
+
+		openUrl(api_url + '?' + p);
+
 		return false;
 	});
 
 	$("#footer").on("click", "a", function(e) {
+		stopEvent(e);
 		track("Redirect", "Other", $(this).attr("href"));
+		openUrl($(this).attr("href"));
+		return false;
 	});
 
 

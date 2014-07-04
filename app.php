@@ -235,6 +235,8 @@ define('API',	(false === strpos(strtolower($_SERVER['SERVER_PROTOCOL']),'https')
 
 define('ADMIN', in_array(IP, $admins));
 
+define('VER', '1.0.6');
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -340,6 +342,7 @@ $data = (object)array(
 	'cities'	=>	$cities,
 	'statuses'	=>	$statuses,
 	'profile'	=>	$profile,
+	'ver'		=>	VER,
 );
 
 if($user && $pass && !$isLogged)

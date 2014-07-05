@@ -235,7 +235,7 @@ define('API',	(false === strpos(strtolower($_SERVER['SERVER_PROTOCOL']),'https')
 
 define('ADMIN', in_array(IP, $admins));
 
-define('VER', '1.0.7');
+define('VER', '1.0.8');
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -296,7 +296,11 @@ if(false !== $redirect)
 {
 	$redirect = (0 === strpos($redirect, URL)) ? $redirect : URL . $redirect;
 
+	$img = '<img src="data:image/png;base64,'.base64_encode(file_get_contents('i/logo_big.png')).'" />';
+
 	header('Content-Type: text/html; charset=UTF-8', true);
+	echo '<center>'.$img;
+
 	if($user && $pass)
 		echo
 		'
@@ -314,6 +318,7 @@ if(false !== $redirect)
 		';
 	else
 		echo '<script type="text/javascript">window.top.location.href="' . $redirect . '";</script>';
+	echo '</center>';
 	exit;
 }
 

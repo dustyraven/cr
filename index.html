@@ -112,18 +112,34 @@
 
 	</style>
 
-<!-- UA-52322431-1 -->
 
-<!-- Google Analytics -->
 <script>
-(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-ga('create', 'UA-52322431-1', 'auto');
-ga('send', 'pageview');
+
+var cr			= {},
+	types,
+	cities,
+	events,
+	isLogged	= 0,
+	filters		= ['type','city','status'],
+	filterNames	= {'type':'Събитие','city':'Град','status':'Статус'},
+	api_url		= 'http://pi.denev.info/cr/app.php',
+	ga_id		= "UA-52322431-1",
+	gaPlugin	= false,
+	ver			= '1.0.8';
+
+//<!-- Google Analytics -->
+if("undefined" == typeof device) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+	ga('create', ga_id, 'auto');
+	ga('send', 'pageview');
+}
+
+//<!-- End Google Analytics -->
+
 </script>
-<!-- End Google Analytics -->
 
 <script src="phonegap.js"></script>
 
@@ -524,15 +540,15 @@ ga('send', 'pageview');
   		track("View",types[e.type], e.title);
 
 		if(2 == e.status)
-			statusEl =$("<div>").attr({"class":"alert-success"}).html("Вие ще участвате в събитието");
+			statusEl =$("<div>").attr({"class":"alert-success"}).html("Ще участваш в събитието");
 		else if(3 == e.status)
 			statusEl =$("<div>").attr({"class":"alert-danger"}).html("Няма свободни места");
 		else if(4 == e.status)
-			statusEl =$("<div>").attr({"class":"alert-danger"}).html("Вашата възраст не е подходяща");
+			statusEl =$("<div>").attr({"class":"alert-danger"}).html("Възрастта ти не е подходяща");
 		else if(5 == e.status)
-			statusEl =$("<div>").attr({"class":"alert-danger"}).html("В събитието има участници, с които вече сте се срещали");
+			statusEl =$("<div>").attr({"class":"alert-danger"}).html("В събитието има участници,<br />с които си се срещал");
 		else if(6 == e.status)
-			statusEl =$("<div>").attr({"class":"alert-danger"}).html("Вашият лимит за участие в този тип събития е изчерпан");
+			statusEl =$("<div>").attr({"class":"alert-danger"}).html("Твоят лимит за участие в този<br />тип събития е изчерпан");
 
 		if(statusEl) statusEl.addClass("alert text-center");
 
@@ -787,23 +803,41 @@ function clog(str) {
 
 function track(category, action, label, value) {
 
-	if("undefined" == typeof ga) {
-		clog("GA is not installed");
-		return false;
+	if(!category || !action) return false;
+	if(!label) label = false;
+	if(!value) value = false;
+
+	if("function" == typeof ga) {
+		var e = {
+			'hitType': 'event',
+			'eventCategory': category,
+			'eventAction': action
+		};
+		if(label) e.eventLabel = label;
+		//if(value) e.eventValue = value;
+		ga('send', e);
 	}
 
-	if(!category || !action) return false;
+	if(gaPlugin)
+		gaPlugin.trackEvent( nativePluginResultHandler, nativePluginErrorHandler, category, action, label, value);
 
 	clog(category + " : " + action + " : " + label);
 
-	var e = {
-		'hitType': 'event',
-		'eventCategory': category,
-		'eventAction': action
-	};
-	if(label) e.eventLabel = label;
-	//if(value) e.eventValue = value;
-	ga('send', e);
+}
+
+
+function nativePluginResultHandler (result) {
+	clog('nativePluginResultHandler: '+result);
+}
+
+function nativePluginErrorHandler (error) {
+	clog('nativePluginErrorHandler: '+error);
+}
+
+function onDeviceReady() {
+	gaPlugin = window.plugins.gaPlugin;
+	gaPlugin.init(successHandler, errorHandler, ga_id, 10);
+	log("Device Ready");
 }
 
 ////////////////////////////////////
@@ -811,17 +845,7 @@ function track(category, action, label, value) {
 ////////////////////////////////////
 
 
-var cr = {},
-	isLogged = 0,
-	filters = ['type','city','status'],
-	filterNames = {'type':'Събитие','city':'Град','status':'Статус'},
-	types,
-	cities,
-	events,
-	api_url = 'http://pi.denev.info/cr/app.php',
-	ver = '1.0.8';
-
-
+document.addEventListener("deviceready", onDeviceReady, true);
 
 (function($) {
 

@@ -158,6 +158,8 @@ function parseData($data)
 				$r->status = 5;
 			elseif(false !== strpos($r->status, 'Не е подходящо'))
 				$r->status = 4;
+			elseif(false !== strpos($r->status, 'Няма свободни места'))
+				$r->status = 3;
 			else
 				$r->status = 7;	// NEW (unknown)
 

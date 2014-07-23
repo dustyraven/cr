@@ -795,7 +795,7 @@ function clog(str) {
 	if(!c.length)
 		c = $("<pre>").attr({"id": "console", "class": "col-xs-12 col-lg-6 col-lg-offset-3"}).insertAfter("#footer");
 
-	c.append("[" + new Date().toLocaleString() + "] : " + str + "\n");
+	c.append("[" + new Date().toLocaleString("bg") + "] : " + str + "\n");
 	var splitted = c.html().split("\n");
 	var txt = splitted.slice(-6,-1).join("\n") + "\n";
 	c.html(txt);
@@ -818,8 +818,9 @@ function track(category, action, label, value) {
 		ga('send', e);
 	}
 
-	if(gaPlugin)
+	if(gaPlugin) {
 		gaPlugin.trackEvent( nativePluginResultHandler, nativePluginErrorHandler, category, action, label, value);
+	}
 
 	clog(category + " : " + action + " : " + label);
 
@@ -836,8 +837,8 @@ function nativePluginErrorHandler (error) {
 
 function onDeviceReady() {
 	gaPlugin = window.plugins.gaPlugin;
-	gaPlugin.init(successHandler, errorHandler, ga_id, 10);
-	log("Device Ready");
+	gaPlugin.init(nativePluginResultHandler, nativePluginErrorHandler, ga_id, 10);
+	clog("Device Ready");
 }
 
 ////////////////////////////////////

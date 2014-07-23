@@ -804,8 +804,8 @@ function clog(str) {
 function track(category, action, label, value) {
 
 	if(!category || !action) return false;
-	if(!label) label = false;
-	if(!value) value = false;
+	if(!label) label = "";
+	if(!value) value = 0;
 
 	if("function" == typeof ga) {
 		var e = {

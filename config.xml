@@ -4,7 +4,7 @@
 <widget xmlns     = "http://www.w3.org/ns/widgets"
         xmlns:gap = "http://phonegap.com/ns/1.0"
         id        = "com.phonegap.clubr"
-        version   = "1.0.9">
+        version   = "1.0.10">
 
     <name>ClubR</name>
 
@@ -90,7 +90,7 @@
     <icon src="res/icon/windows-phone/icon-173.png" gap:platform="winphone"   gap:role="background" />
 
     <!-- Define app splash screen for each platform. -->
-    <gap:splash src="splash.9.png" gap:platform="android" />
+    <gap:splash src="res/splash.9.png" gap:platform="android" />
     <!--
     <gap:splash src="res/splash.png" />
     <gap:splash src="res/screen/android/screen-ldpi-portrait.png"       gap:platform="android" gap:qualifier="ldpi" />

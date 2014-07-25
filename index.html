@@ -482,11 +482,11 @@ if("undefined" == typeof device) {
 		var statusIcons = {
 			0: "search",
 			1: "pencil",
-			2: "check",
+			2: "pushpin",
 			3: "remove-circle",
 			4: "ban-circle",
 			5: "user",
-			6: "remove-circle",
+			6: "transfer",
 			7: "exclamation-sign"
 			};
 
@@ -515,12 +515,9 @@ if("undefined" == typeof device) {
 		tbody.appendTo(table);
 		$("#results").html(table);
 
-
-		$("#results tr.status-2").addClass("text-success");
-		$("#results tr.status-3").addClass("text-danger");
-		$("#results tr.status-4").addClass("text-danger");
-		$("#results tr.status-5").addClass("text-danger");
-		$("#results tr.status-6").addClass("text-danger");
+		$("#results tr.status-1").addClass("text-success");
+		$("#results tr.status-2").addClass("text-info");
+		$("#results tr.status-3, #results tr.status-4, #results tr.status-5, #results tr.status-6").addClass("text-danger");
 
 
 		$( "td.free" ).each(function( index ) {
@@ -548,7 +545,7 @@ if("undefined" == typeof device) {
 		else if(5 == e.status)
 			statusEl =$("<div>").attr({"class":"alert-danger"}).html("В събитието има участници,<br />с които си се срещал");
 		else if(6 == e.status)
-			statusEl =$("<div>").attr({"class":"alert-danger"}).html("Твоят лимит за участие в този<br />тип събития е изчерпан");
+			statusEl =$("<div>").attr({"class":"alert-danger"}).html("Минималният срок между две участия<br />в този тип събития е 30 дни");
 
 		if(statusEl) statusEl.addClass("alert text-center");
 
@@ -795,7 +792,7 @@ function clog(str) {
 	if(!c.length)
 		c = $("<pre>").attr({"id": "console", "class": "col-xs-12 col-lg-6 col-lg-offset-3"}).insertAfter("#footer");
 
-	c.append("[" + new Date().toLocaleString("bg") + "] : " + str + "\n");
+	c.append("[" + new Date().toISOString().split(".")[0].split("T")[1] + "] : " + str + "\n");
 	var splitted = c.html().split("\n");
 	var txt = splitted.slice(-6,-1).join("\n") + "\n";
 	c.html(txt);
@@ -804,22 +801,27 @@ function clog(str) {
 function track(category, action, label, value) {
 
 	if(!category || !action) return false;
-	if(!label) label = "";
-	if(!value) value = 0;
 
 	if("function" == typeof ga) {
-		var e = {
-			'hitType': 'event',
-			'eventCategory': category,
-			'eventAction': action
-		};
-		if(label) e.eventLabel = label;
-		//if(value) e.eventValue = value;
-		ga('send', e);
+		if(value && label)
+			ga('send', 'event', category, action, label, value);
+		else if(value)
+			ga('send', 'event', category, action, "", value);
+		else if(label)
+			ga('send', 'event', category, action, label);
+		else
+			ga('send', 'event', category, action);
 	}
 
 	if(gaPlugin) {
-		gaPlugin.trackEvent( nativePluginResultHandler, nativePluginErrorHandler, category, action, label, value);
+		if(value && label)
+			gaPlugin.trackEvent( gaResultHandler, gaErrorHandler, category, action, label, value);
+		else if(value)
+			gaPlugin.trackEvent( gaResultHandler, gaErrorHandler, category, action, "", value);
+		else if(label)
+			gaPlugin.trackEvent( gaResultHandler, gaErrorHandler, category, action, label, -1);
+		else
+			gaPlugin.trackEvent( gaResultHandler, gaErrorHandler, category, action, "", -1);
 	}
 
 	clog(category + " : " + action + " : " + label);
@@ -827,18 +829,23 @@ function track(category, action, label, value) {
 }
 
 
-function nativePluginResultHandler (result) {
-	clog('nativePluginResultHandler: '+result);
+function gaResultHandler (result) {
+	clog('gaResultHandler: '+result);
 }
 
-function nativePluginErrorHandler (error) {
-	clog('nativePluginErrorHandler: '+error);
+function gaErrorHandler (error) {
+	clog('gaErrorHandler: '+error);
 }
 
 function onDeviceReady() {
 	gaPlugin = window.plugins.gaPlugin;
-	gaPlugin.init(nativePluginResultHandler, nativePluginErrorHandler, ga_id, 10);
+	gaPlugin.init(gaResultHandler, gaErrorHandler, ga_id, 10);
 	clog("Device Ready");
+}
+
+function onAppExit() {
+	if(gaPlugin)
+		gaPlugin.exit(gaResultHandler, gaErrorHandler);
 }
 
 ////////////////////////////////////
@@ -847,6 +854,7 @@ function onDeviceReady() {
 
 
 document.addEventListener("deviceready", onDeviceReady, true);
+window.addEventListener("beforeunload", onAppExit, true);
 
 (function($) {
 

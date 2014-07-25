@@ -154,12 +154,16 @@ function parseData($data)
 				if(strpos($tmp, 'Location: order.php?id='))
 					$r->status = 2;
 			}
+			elseif(false !== strpos($r->status, 'Вече си записан'))
+				$r->status = 2;
 			elseif(false !== strpos($r->status, 'Вече си се срещал'))
 				$r->status = 5;
 			elseif(false !== strpos($r->status, 'Не е подходящо'))
 				$r->status = 4;
 			elseif(false !== strpos($r->status, 'Няма свободни места'))
 				$r->status = 3;
+			elseif(false !== strpos($r->status, 'срок между 2 участия')) //Мин. срок между 2 участия е 30 дни
+				$r->status = 6;
 			else
 				$r->status = 7;	// NEW (unknown)
 
@@ -220,7 +224,7 @@ $statuses = array(
 		3	=>	'Няма свободни места',
 		4	=>	'Неподходяща възраст',
 		5	=>	'Има познати участници',
-		6	=>	'Надхвърлен лимит за участия',
+		6	=>	'30 дни между 2 участия',
 );
 
 list($IP) = explode(',', empty($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['REMOTE_ADDR'] : $_SERVER['HTTP_X_FORWARDED_FOR']);
